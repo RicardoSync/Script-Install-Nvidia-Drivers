@@ -48,20 +48,29 @@ echo "Configurando NVIDIA como tarjeta gráfica predeterminada..."
 echo "options nvidia-drm modeset=1" > /etc/modprobe.d/nvidia-drm.conf
 dracut --force
 
+#-------------------------------------------------------------------------------------------------------------------------------#
 # Instalar aplicaciones adicionales, puedes eliminar estas lineas
+# estas lineas de codigo que esten dentro de este bloque pueden ser eliminadas, pues solo son paquetes que uso yo
+clear
 echo "Instalando aplicaciones adicionales..."
-dnf install -y python3-pip python3-tkinter vlc cava simplescreenrecorder wireguard
-
-
+sleep 10
+#instalacion de code 
 sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
 echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" | sudo tee /etc/yum.repos.d/vscode.repo > /dev/null
 dnf check-update
+dnf install -y python3-pip python3-tkinter vlc cava simplescreenrecorder wireguard
+dnf install -y system-config-printer
 sudo dnf -y install code # or code-insiders
+
+#flatpaks paquetes
 
 flatpak install flathub org.kde.kdenlive -y
 flatpak install flathub com.jetbrains.PyCharm-Community -y
 flatpak install flathub com.spotify.Client -y
 flatpak install flathub io.github.shiftey.Desktop -y
+flatpak install flathub com.obsproject.Studio -y
+flatpak install flathub com.brave.Browser -y
+
 # Instalar Apache
 echo "Instalando Apache..."
 dnf install -y httpd
@@ -76,8 +85,11 @@ echo "Abriendo el puerto 80 en el firewall..."
 firewall-cmd --permanent --add-service=http
 firewall-cmd --reload
 
+#-------------------------------------------------------------------------------------------------------------------------------#
+
 # Mensaje final
-echo "¡Instalación completada! Reinicia el sistema para aplicar los cambios."
-echo "Reiniciando en 10 segundos..."
-#sleep 10
-#reboot
+echo "Reiniciando en 30 segundos..."
+clear
+echo "Cuando se reicnicie en 30 segundos, ejecuta el 2do script final-nvidia.sh"
+sleep 30
+reboot
