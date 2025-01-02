@@ -1,4 +1,12 @@
 #!/bin/bash
+#!/bin/bash
+
+# Mostrar banner
+clear
+echo "=========================================="
+echo "               CISO Script                "
+echo "=========================================="
+sleep 2
 
 # Verificar si se ejecuta como superusuario
 if [ "$EUID" -ne 0 ]; then
@@ -6,7 +14,7 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-# Habilitar repositorios oficiales de Fedora y RPM Fusion
+# Actualizar el sistema
 dnf update -y
 dnf upgrade -y
 echo "Habilitando repositorios oficiales y RPM Fusion..."
@@ -48,28 +56,42 @@ echo "Configurando NVIDIA como tarjeta gráfica predeterminada..."
 echo "options nvidia-drm modeset=1" > /etc/modprobe.d/nvidia-drm.conf
 dracut --force
 
-#-------------------------------------------------------------------------------------------------------------------------------#
-# Instalar aplicaciones adicionales, puedes eliminar estas lineas
-# estas lineas de codigo que esten dentro de este bloque pueden ser eliminadas, pues solo son paquetes que uso yo
-clear
-echo "Instalando aplicaciones adicionales..."
-sleep 10
-#instalacion de code 
-sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
-echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" | sudo tee /etc/yum.repos.d/vscode.repo > /dev/null
+# Instalar paquetes adicionales sin preguntar
+echo "Instalando paquetes adicionales..."
+
+# Instalar repositorios y aplicaciones de desarrollo
+echo "Instalando repositorios de RPM Fusion..."
+dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+dnf update -y @core
+dnf swap -y ffmpeg-free ffmpeg --allowerasing
+dnf update -y @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
+dnf swap -y mesa-va-drivers mesa-va-drivers-freeworld
+dnf swap -y mesa-vdpau-drivers mesa-vdpau-drivers-freeworld
+dnf install -y libva-nvidia-driver
+
+# Instalar otros paquetes para NVIDIA y dependencias
+dnf install -y kernel-devel kernel-headers gcc make dkms acpid libglvnd-glx libglvnd-opengl libglvnd-devel pkgconfig
+dnf makecache
+dnf install -y akmod-nvidia xorg-x11-drv-nvidia-cuda
+dnf install -y libva-nvidia-driver
+
+# Instalar Visual Studio Code
+echo "Instalando Visual Studio Code..."
+rpm --import https://packages.microsoft.com/keys/microsoft.asc
+echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" | tee /etc/yum.repos.d/vscode.repo > /dev/null
 dnf check-update
 dnf install -y python3-pip python3-tkinter vlc cava simplescreenrecorder wireguard
 dnf install -y system-config-printer
-sudo dnf -y install code # or code-insiders
+dnf install -y code # o code-insiders
 
-#flatpaks paquetes
-
-flatpak install flathub org.kde.kdenlive -y
-flatpak install flathub com.jetbrains.PyCharm-Community -y
-flatpak install flathub com.spotify.Client -y
-flatpak install flathub io.github.shiftey.Desktop -y
-flatpak install flathub com.obsproject.Studio -y
-flatpak install flathub com.brave.Browser -y
+# Instalar Flatpaks
+echo "Instalando Flatpaks..."
+flatpak install -y flathub org.kde.kdenlive
+flatpak install -y flathub com.jetbrains.PyCharm-Community
+flatpak install -y flathub com.spotify.Client
+flatpak install -y flathub io.github.shiftey.Desktop
+flatpak install -y flathub com.obsproject.Studio
+flatpak install -y flathub com.brave.Browser
 
 # Instalar Apache
 echo "Instalando Apache..."
@@ -85,11 +107,11 @@ echo "Abriendo el puerto 80 en el firewall..."
 firewall-cmd --permanent --add-service=http
 firewall-cmd --reload
 
-#-------------------------------------------------------------------------------------------------------------------------------#
-
 # Mensaje final
 echo "Reiniciando en 30 segundos..."
+sleep 3
 clear
-echo "Cuando se reicnicie en 30 segundos, ejecuta el 2do script final-nvidia.sh"
+echo "Cuando se reinicie, ejecuta el segundo script final-nvidia.sh"
 sleep 30
 reboot
+
