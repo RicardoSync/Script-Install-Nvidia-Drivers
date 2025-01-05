@@ -6,6 +6,32 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
+apt install mysql-server apache2 php php-mysql -y
+apt install python3-tk python3-pip -y
+apt install vlc cava -y
+
+sudo apt-get install wget gpg
+wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" |sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
+rm -f packages.microsoft.gpg
+sudo apt install apt-transport-https
+sudo apt update
+sudo apt install code # or code-insiders
+
+sudo apt install flatpak -y
+
+flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+flatpak install flathub org.kde.kdenlive -y
+flatpak install flathub io.github.shiftey.Desktop -y
+flatpak install flathub com.obsproject.Studio -y
+
+
+
+sudo snap install mysql-workbench-community
+
+
 # Agregar el repositorio de controladores NVIDIA
 echo "Agregando el repositorio de controladores NVIDIA..."
 add-apt-repository -y ppa:graphics-drivers/ppa
@@ -48,8 +74,5 @@ update-initramfs -u
 echo "Configurando NVIDIA como tarjeta gráfica predeterminada..."
 prime-select nvidia
 
-# Mensaje final
-echo "¡Instalación completada! Reinicia el sistema para aplicar los cambios."
-echo "Reiniciando en 10 segundos..."
-sleep 10
-reboot
+
+
