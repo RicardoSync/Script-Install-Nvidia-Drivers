@@ -1,5 +1,4 @@
 #!/bin/bash
-#!/bin/bash
 
 # Mostrar banner
 clear
@@ -10,7 +9,7 @@ sleep 2
 
 # Verificar si se ejecuta como superusuario
 if [ "$EUID" -ne 0 ]; then
-  echo "Por favor, ejecuta este script como root o con sudo."
+  echo "Por favor, ejecuta este script como root o con "
   exit 1
 fi
 
@@ -80,32 +79,71 @@ echo "Instalando Visual Studio Code..."
 rpm --import https://packages.microsoft.com/keys/microsoft.asc
 echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" | tee /etc/yum.repos.d/vscode.repo > /dev/null
 dnf check-update
-dnf install -y python3-pip python3-tkinter vlc cava simplescreenrecorder wireguard
+dnf install -y python3-pip python3-tkinter vlc java-11-openjdk wireguard-tools
 dnf install -y system-config-printer
 dnf install -y code # o code-insiders
+dnf install -y nvidia-prime
+dnf install -y gnome-tweaks
 
-# Instalar Flatpaks
+# Configuración de Zsh con Oh My Zsh y Powerlevel10k
+echo "Instalando y configurando Zsh, Oh My Zsh y Powerlevel10k..."
+
+# Cambiar la shell por defecto a Zsh
+chsh -s /bin/zsh
+
+# Instalar Zsh y los plugins necesarios
+dnf install -y zsh zsh-autosuggestions zsh-syntax-highlighting
+
+# Instalar Oh My Zsh
+sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" || {
+    echo "No se pudo instalar Oh My Zsh."
+    exit 1
+}
+
+# Instalar Powerlevel10k (a través de los repositorios de GitHub)
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/.oh-my-zsh/custom/themes/powerlevel10k || {
+    echo "No se pudo clonar Powerlevel10k."
+    exit 1
+}
+
+# Configurar Zsh para usar Powerlevel10k y los plugins de autosuggestions y syntax-highlighting
+echo 'ZSH_THEME="powerlevel10k/powerlevel10k"' >> ~/.zshrc
+echo 'source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh' >> ~/.zshrc
+echo 'source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' >> ~/.zshrc
+
+# Recargar la configuración de Zsh
+source ~/.zshrc
+
+# Configuración de Java (si tienes varias versiones)
+echo "Configurando la versión de Java..."
+alternatives --config java
+
+# Instalar Flatpaks (si es necesario)
 echo "Instalando Flatpaks..."
-flatpak install -y flathub org.kde.kdenlive
-flatpak install -y flathub com.jetbrains.PyCharm-Community
-flatpak install -y flathub com.spotify.Client
-flatpak install -y flathub io.github.shiftey.Desktop
-flatpak install -y flathub com.obsproject.Studio
-flatpak install -y flathub com.brave.Browser
+#flatpak install -y flathub org.kde.kdenlive
+#flatpak install -y flathub io.github.shiftey.Desktop
+#flatpak install -y flathub com.obsproject.Studio
 
-# Instalar Apache
-echo "Instalando Apache..."
-dnf install -y httpd
+#instalacion de chrome y paquetes rpm
+wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+dnf -y install google-chrome-stable_current_x86_64.rpm
 
-# Habilitar y arrancar el servicio de Apache
-echo "Habilitando y arrancando Apache..."
-systemctl enable httpd
-systemctl start httpd
+wget https://dbeaver.io/files/dbeaver-ce-latest-stable.x86_64.rpm
+dnf -y install dbeaver-ce-latest-stable.x86_64.rpm
 
-# Abrir el puerto 80 en el firewall
-echo "Abriendo el puerto 80 en el firewall..."
-firewall-cmd --permanent --add-service=http
-firewall-cmd --reload
+wget https://dev.mysql.com/get/mysql80-community-release-fc41-1.noarch.rpm
+dnf -y install mysql80-community-release-fc41-1.noarch.rpm
+
+dnf -y install mysql-community-server
+
+# habilitar mysql
+systemctl start mysqld
+systemctl enable mysqld
+
+
+wget https://dev.mysql.com/get/Downloads/MySQLGUITools/mysql-workbench-community-8.0.29-1.fc41.x86_64.rpm
+dnf -y install mysql-workbench-community-8.0.29-1.fc41.x86_64.rpm
+
 
 # Mensaje final
 echo "Reiniciando en 30 segundos..."
@@ -114,4 +152,3 @@ clear
 echo "Cuando se reinicie, ejecuta el segundo script final-nvidia.sh"
 sleep 30
 reboot
-
